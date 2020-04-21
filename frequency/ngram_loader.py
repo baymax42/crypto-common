@@ -41,12 +41,12 @@ def _get_n_from_file(file, limit):
     return _convert_file_content(file_content)
 
 
-class NGram:
-    _gram_type_name = ['monograms', 'bigrams', 'trigrams', 'quadgrams']
+class NGramFileLoader:
+    _gram_type_name_list = ['monograms', 'bigrams', 'trigrams', 'quadgrams']
 
     def __init__(self, **kwargs) -> None:
         """
-        NGram loader which returns count for each specified ngram for given language.
+        n-gram loader which returns count for specified n-grams for given language.
 
         :key language: Language - language to use when loading file with specified ngram
         :key n: NGramType - number which specify which ngram to choose (e.g 2 = bigram)
@@ -67,11 +67,11 @@ class NGram:
 
     @property
     def _filename(self) -> str:
-        return './{}/{}'.format(self._language.value, self._gram_type_name[self._n.value - 1])
+        return './{}/{}'.format(self._language.value, self._gram_type_name_list[self._n.value - 1])
 
     @property
     def _counts_filename(self) -> str:
-        return './{}/{}_counts'.format(self._language.value, self._gram_type_name[self._n.value - 1])
+        return './{}/{}_counts'.format(self._language.value, self._gram_type_name_list[self._n.value - 1])
 
     def _load_all_count(self):
         with open(self._counts_filename, 'r') as count_file:

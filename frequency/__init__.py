@@ -1,1 +1,1 @@
-from .ngram import NGram, Language, NGramType
+from .ngram_loader import NGramFileLoader, Language, NGramType
