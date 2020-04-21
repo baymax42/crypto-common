@@ -1,14 +1,26 @@
-from enum import Enum
-from typing import Any, Dict, Tuple, List, Optional
+from typing import Optional, List, Any, Tuple, overload
+
+from .types import Language, NGramType, NGramCountMap, NGramFrequencyMap
 
 
+def get_n_gram_frequency(n_gram_type: NGramType, text: str):
+    return n_gram_count_from_text(n_gram_type.value, text)
 
 
+def get_n_gram_frequency(n_gram_type: NGramType, language: Language = Language.ENGLISH, limit: int = 30):
+    n_gram_loader = NGramFileLoader(language=language, n=n_gram_type)
+    counts = n_gram_loader.get_first_n(limit)
+    return n_gram_loader.to_frequencies(counts)
 
 
+def n_gram_count_to_frequency(counts: NGramCountMap) -> NGramFrequencyMap:
+    all_count = sum(counts.values())
+    return NGramFrequencyMap({key: count / all_count for key, count in counts})
 
 
-
+def n_gram_count_from_text(n: int, base_text: str) -> NGramCountMap:
+    text = ''.join(base_text.upper().split())
+    n_gram_counts = dict()
 
     for frame_end in range(n, len(text) - n):
         frame_start = frame_end - n
