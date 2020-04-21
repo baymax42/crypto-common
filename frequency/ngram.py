@@ -2,43 +2,25 @@ from enum import Enum
 from typing import Any, Dict, Tuple, List, Optional
 
 
-class Language(Enum):
-    ENGLISH = 'en'
 
 
-class NGramType(Enum):
-    MONOGRAM = 1
-    BIGRAM = 2
-    TRIGRAM = 3
-    QUADRAGRAM = 4
 
 
-def _validate(language: Any, n: Any):
-    if not isinstance(language, Language):
-        raise Exception('Unsupported language: {}'.format(language))
-    if not isinstance(n, NGramType):
-        raise Exception('Unsupported n-gram type: {}'.format(n))
 
 
-def _format_record(record: str) -> Tuple[str, int]:
-    key, count = record.strip().split(' ')
-    return key, int(count)
 
 
-def _convert_file_content(file_content: List[str]) -> Dict[str, int]:
-    record_tuples = map(_format_record, file_content)
-    records: Dict[str, int] = {key: count for key, count in record_tuples}
-    return records
+    for frame_end in range(n, len(text) - n):
+        frame_start = frame_end - n
+        extracted_n_gram = text[frame_start:frame_end]
+        if extracted_n_gram in n_gram_counts:
+            n_gram_counts[extracted_n_gram] += 1
+        else:
+            n_gram_counts[extracted_n_gram] = 1
 
-
-def _get_n_from_file(file, limit):
-    file_content = []
-    for _ in range(limit):
-        try:
-            file_content.append(next(file))
-        except StopIteration:
-            pass
-    return _convert_file_content(file_content)
+    return NGramCountMap({n_gram: count for n_gram, count in sorted(n_gram_counts.items(),
+                                                                    key=lambda item: item[1],
+                                                                    reverse=True)})
 
 
 class NGramFileLoader:
@@ -78,18 +60,46 @@ class NGramFileLoader:
             count = count_file.readline().strip()
         self._all_count = count
 
-    def get_first_n(self, limit: int) -> Dict[str, int]:
+    def get_first_n(self, limit: int) -> NGramCountMap:
         with open(self._filename, 'r') as n_gram_file:
             records = _get_n_from_file(n_gram_file, limit)
         return records
 
-    def limit(self, skip: int, limit: int) -> Dict[str, int]:
+    def limit(self, skip: int, limit: int) -> NGramCountMap:
         with open(self._filename, 'r') as n_gram_file:
             [next(n_gram_file) for _ in range(skip)]
             records = _get_n_from_file(n_gram_file, limit)
         return records
 
-    def to_frequencies(self, ngram_count: Dict[str, int]) -> Dict[str, float]:
+    def to_frequencies(self, ngram_count: NGramCountMap) -> NGramFrequencyMap:
         if self._all_count is None:
             self._load_all_count()
-        return {key: count / self._all_count for key, count in ngram_count}
+        return NGramFrequencyMap({key: count / self._all_count for key, count in ngram_count})
+
+
+def _format_record(record: str) -> Tuple[str, int]:
+    key, count = record.strip().split(' ')
+    return key, int(count)
+
+
+def _validate(language: Any, n: Any):
+    if not isinstance(language, Language):
+        raise Exception('Unsupported language: {}'.format(language))
+    if not isinstance(n, NGramType):
+        raise Exception('Unsupported n-gram type: {}'.format(n))
+
+
+def _convert_file_content(file_content: List[str]) -> NGramCountMap:
+    record_tuples = map(_format_record, file_content)
+    records = {key: count for key, count in record_tuples}
+    return NGramCountMap(records)
+
+
+def _get_n_from_file(file, limit) -> NGramCountMap:
+    file_content = []
+    for _ in range(limit):
+        try:
+            file_content.append(next(file))
+        except StopIteration:
+            pass
+    return _convert_file_content(file_content)
