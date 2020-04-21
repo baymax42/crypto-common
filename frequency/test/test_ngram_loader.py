@@ -10,6 +10,7 @@ FAILING_LANGUAGE = "py"
 FAILING_N_GRAM_TYPE = -5
 
 
+
 class TestNGramLoader:
     def test_init__language_validation(self):
         with pytest.raises(Exception) as exception:
@@ -21,16 +22,21 @@ class TestNGramLoader:
             NGramFileLoader(n=FAILING_N_GRAM_TYPE)
         assert "Unsupported n-gram type" in str(exception.value)
 
-    def test_filename(self):
+    @patch('os.path.dirname')
+    def test_filename(self, dirname_mock):
+        dirname_mock.return_value = "/"
         ngram_loader = NGramFileLoader(language=LANGUAGE, n=TYPE_BIGRAM)
-        assert './en/bigrams' == ngram_loader._filename
+        assert '/en/bigrams' == ngram_loader._filename
 
         ngram_loader = NGramFileLoader(language=LANGUAGE, n=NGramType.QUADRAGRAM)
-        assert './en/quadragrams' == ngram_loader._filename
+        assert '/en/quadgrams' == ngram_loader._filename
 
-    def test_filename__with_default_values(self):
+    @patch('os.path.dirname')
+    def test_filename__with_default_values(self, dirname_mock):
+        dirname_mock.return_value = "/"
+
         ngram_loader = NGramFileLoader()
-        assert './en/monograms' == ngram_loader._filename
+        assert '/en/monograms' == ngram_loader._filename
 
     @patch("builtins.open", new_callable=mock_open, read_data="AB 12\nDF 1\n")
     def test_get_first_n(self, _mock_file):

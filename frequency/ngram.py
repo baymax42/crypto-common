@@ -1,4 +1,5 @@
-from typing import Optional, List, Any, Tuple, overload
+import os
+from typing import Optional, List, Any, Tuple
 
 from .types import Language, NGramType, NGramCountMap, NGramFrequencyMap
 
@@ -61,16 +62,22 @@ class NGramFileLoader:
 
     @property
     def _filename(self) -> str:
-        return './{}/{}'.format(self._language.value, self._gram_type_name_list[self._n.value - 1])
+        return os.path.join(
+            os.path.dirname(__file__),
+            '{}/{}'.format(self._language.value, self._gram_type_name_list[self._n.value - 1])
+        )
 
     @property
     def _counts_filename(self) -> str:
-        return './{}/{}_counts'.format(self._language.value, self._gram_type_name_list[self._n.value - 1])
+        return os.path.join(
+            os.path.dirname(__file__),
+            '{}/{}_counts'.format(self._language.value, self._gram_type_name_list[self._n.value - 1])
+        )
 
     def _load_all_count(self):
         with open(self._counts_filename, 'r') as count_file:
             count = count_file.readline().strip()
-        self._all_count = count
+        self._all_count = int(count)
 
     def get_first_n(self, limit: int) -> NGramCountMap:
         with open(self._filename, 'r') as n_gram_file:
@@ -86,7 +93,7 @@ class NGramFileLoader:
     def to_frequencies(self, ngram_count: NGramCountMap) -> NGramFrequencyMap:
         if self._all_count is None:
             self._load_all_count()
-        return NGramFrequencyMap({key: count / self._all_count for key, count in ngram_count})
+        return NGramFrequencyMap({key: (count / self._all_count) for key, count in ngram_count.items()})
 
 
 def _format_record(record: str) -> Tuple[str, int]:
